@@ -1,0 +1,17 @@
+[
+    {
+        "id":1,
+        "name":"James Bond",
+        "company":"Happy Dog"
+    },
+    {
+        "id":2,
+        "name":"Jimmy Young",
+        "company":"Leisure Heaven"
+    },
+    {
+        "id":3,
+        "name":"Penny Stroop",
+        "company":"Canny and Co."
+    }
+]
