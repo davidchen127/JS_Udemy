@@ -86,6 +86,24 @@ const ItemConroller = (function () {
       });
       return found;
     },
+
+    deleteItem(id) {
+      // get ids
+      ids = data.items.map(function (item) {
+        return item.id;
+      });
+
+      // get index
+      const index = ids.indexOf(id);
+
+      // remove item
+      data.items.splice(index, 1);
+    },
+
+    // clear all items
+    clearAllItems() {
+      data.items = [];
+    },
   };
 })();
 
@@ -101,6 +119,7 @@ const UIConroller = (function () {
     itemNameInput: '#item-name',
     itemCaloriesInput: '#item-calories',
     totalCalories: '.total-calories',
+    clearBtn: '.clear-btn',
   };
 
   return {
@@ -162,11 +181,11 @@ const UIConroller = (function () {
     },
 
     clearEditState() {
-      UIConroller.clearInput();
       document.querySelector(UISelectors.updatedBtn).style.display = 'none';
       document.querySelector(UISelectors.deleteBtn).style.display = 'none';
       document.querySelector(UISelectors.backBtn).style.display = 'none';
       document.querySelector(UISelectors.addBtn).style.display = 'inline';
+      UIConroller.clearInput();
     },
 
     addItemToForm() {
@@ -198,6 +217,26 @@ const UIConroller = (function () {
         }
       });
     },
+
+    deleteListItem(id) {
+      const itemID = `#item-${id}`;
+      const item = document.querySelector(itemID);
+      item.remove(item);
+      // update total calories
+      const totalCalories = ItemConroller.getTotalCalories();
+      UIConroller.showTotalCalories(totalCalories);
+
+      UIConroller.clearEditState();
+    },
+
+    removeItems() {
+      let listItems = document.querySelectorAll(UISelectors.listItems);
+      // turn node list into array
+      listItems = Array.from(listItems);
+      listItems.forEach((item) => {
+        item.remove();
+      });
+    },
   };
 })();
 
@@ -221,6 +260,21 @@ const App = (function (ItemConroller, UIConroller) {
     document
       .querySelector(UISelectors.updatedBtn)
       .addEventListener('click', itemUpdateSubmit);
+
+    // delete icon click event
+    document
+      .querySelector(UISelectors.deleteBtn)
+      .addEventListener('click', itemDeleteSubmit);
+
+    // back button click event
+    document
+      .querySelector(UISelectors.backBtn)
+      .addEventListener('click', backSubmit);
+
+    // clear button click event
+    document
+      .querySelector(UISelectors.clearBtn)
+      .addEventListener('click', clearAllItemClick);
 
     // disable submit on "ENTER"
     document.addEventListener('keypress', function (e) {
@@ -284,12 +338,52 @@ const App = (function (ItemConroller, UIConroller) {
 
     // update UI
     UIConroller.updateListItem(updateItem);
+
+    // update total calories
+    const totalCalories = ItemConroller.getTotalCalories();
+    UIConroller.showTotalCalories(totalCalories);
+
+    UIConroller.clearEditState();
+
     e.preventDefault();
   };
+
+  const backSubmit = function (e) {
+    UIConroller.clearEditState();
+    e.preventDefault();
+  };
+
+  // Delete button event
+  const itemDeleteSubmit = function (e) {
+    // get currentItem
+    const currentItem = ItemConroller.getCurrentItem();
+    // delet from data structure
+    ItemConroller.deleteItem(currentItem.id);
+    UIConroller.deleteListItem(currentItem.id);
+    e.preventDefault();
+  };
+
+  // clear button event
+  const clearAllItemClick = function (e) {
+    // delete all items in the data
+    ItemConroller.clearAllItems();
+    console.log('gg');
+
+    // update total calories
+    const totalCalories = ItemConroller.getTotalCalories();
+    UIConroller.showTotalCalories(totalCalories);
+
+    UIConroller.removeItems();
+    UIConroller.clearEditState();
+    UIConroller.hideList();
+
+    e.preventDefault();
+  };
+
   // public methods
   return {
     init() {
-      console.log('initializing app');
+      //   console.log('initializing app');
       UIConroller.clearEditState();
       // fetch items from data structures / local storage
       const items = ItemConroller.getItems();
