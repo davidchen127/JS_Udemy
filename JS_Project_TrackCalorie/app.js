@@ -1,4 +1,52 @@
 // storage controller
+const StorageController = (function () {
+  return {
+    storeItem(item) {
+      let items;
+      if (localStorage.getItem('items') === null) {
+        items = [];
+      } else {
+        items = JSON.parse(localStorage.getItem('items'));
+      }
+
+      items.push(item);
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+    getItemsFromStorage() {
+      let items;
+      if (localStorage.getItem('items') === null) {
+        items = [];
+      } else {
+        items = JSON.parse(localStorage.getItem('items'));
+      }
+      return items;
+    },
+
+    updateItemStorage(updatedItem) {
+      let items = JSON.parse(localStorage.getItem('items'));
+      items.forEach(function (item, index) {
+        if (updatedItem.id === item.id) {
+          items.splice(index, 1, updatedItem);
+        }
+      });
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+
+    deleteItemFromStorage(id) {
+      let items = JSON.parse(localStorage.getItem('items'));
+      items.forEach(function (item, index) {
+        if (id === item.id) {
+          items.splice(index, 1);
+        }
+      });
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+
+    clearItemsFromStorage() {
+      localStorage.removeItem('items');
+    },
+  };
+})();
 
 // item controller
 const ItemConroller = (function () {
@@ -11,11 +59,12 @@ const ItemConroller = (function () {
 
   // data structure / state
   const data = {
-    items: [
-      //   { id: 0, name: 'Steak Menu', calories: 800 },
-      //   { id: 0, name: 'Instant noodles', calories: 500 },
-      //   { id: 0, name: 'Banana', calories: 300 },
-    ],
+    // items: [
+    //   //   { id: 0, name: 'Steak Menu', calories: 800 },
+    //   //   { id: 0, name: 'Instant noodles', calories: 500 },
+    //   //   { id: 0, name: 'Banana', calories: 300 },
+    // ],
+    items: StorageController.getItemsFromStorage(),
     currentItem: null,
     totalCalories: 0,
   };
@@ -241,7 +290,7 @@ const UIConroller = (function () {
 })();
 
 // app controller -----------------------------
-const App = (function (ItemConroller, UIConroller) {
+const App = (function (ItemConroller, UIConroller, StorageController) {
   // hook up event listeners
   const loadEventListeners = function () {
     const UISelectors = UIConroller.getSelectors();
@@ -294,14 +343,16 @@ const App = (function (ItemConroller, UIConroller) {
       const newItem = ItemConroller.addItem(input.name, input.calories);
       // add item to the list
       UIConroller.addListItem(newItem);
+
+      //get total calories
+      const totalCalories = ItemConroller.getTotalCalories();
+      UIConroller.showTotalCalories(totalCalories);
+
+      StorageController.storeItem(newItem);
+
+      // clear input fields
+      UIConroller.clearInput();
     }
-
-    //get total calories
-    const totalCalories = ItemConroller.getTotalCalories();
-    UIConroller.showTotalCalories(totalCalories);
-
-    // clear input fields
-    UIConroller.clearInput();
     e.preventDefault();
   };
 
@@ -328,7 +379,7 @@ const App = (function (ItemConroller, UIConroller) {
     e.preventDefault();
   };
 
-  // Update item submit
+  // Update item submitasdfllll
   const itemUpdateSubmit = function (e) {
     // get item input
     const input = UIConroller.getItemInput();
@@ -345,6 +396,8 @@ const App = (function (ItemConroller, UIConroller) {
 
     UIConroller.clearEditState();
 
+    StorageController.updateItemStorage(updateItem);
+
     e.preventDefault();
   };
 
@@ -360,6 +413,10 @@ const App = (function (ItemConroller, UIConroller) {
     // delet from data structure
     ItemConroller.deleteItem(currentItem.id);
     UIConroller.deleteListItem(currentItem.id);
+
+    // delete from local storage
+    StorageController.deleteItemFromStorage(currentItem.id);
+
     e.preventDefault();
   };
 
@@ -376,6 +433,7 @@ const App = (function (ItemConroller, UIConroller) {
     UIConroller.removeItems();
     UIConroller.clearEditState();
     UIConroller.hideList();
+    StorageController.clearItemsFromStorage();
 
     e.preventDefault();
   };
@@ -398,7 +456,7 @@ const App = (function (ItemConroller, UIConroller) {
       UIConroller.showTotalCalories(totalCalories);
     },
   };
-})(ItemConroller, UIConroller);
+})(ItemConroller, UIConroller, StorageController);
 
 // initialize app
 App.init();
